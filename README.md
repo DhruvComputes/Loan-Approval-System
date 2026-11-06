@@ -35,7 +35,7 @@ Loan-Approval-System/
 ├── Project_ML_pipeline.py       # Data preparation, model training, and evaluation
 ├── templates/
 │   └── index.html                # Applicant form and prediction-result interface
-├── 2) loan approval data.csv    # Dataset used to train the model
+├── loan_approval_dataset.csv    # Dataset used to train the model
 ├── loan_model.pkl               # Saved fitted preprocessing and model pipeline
 ├── requirements.txt             # Python dependencies
 └── README.md                    # Project documentation
@@ -109,7 +109,7 @@ pip install -r requirements.txt
 
 Ensure that the following files are in the project directory:
 
-- `2) loan approval data.csv`
+- `loan_approval_dataset.csv`
 - `Project_ML_pipeline.py`
 - `app.py`
 - `requirements.txt`
