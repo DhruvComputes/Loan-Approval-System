@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Loan Approval Prediction System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+
+    <style>
+        body { background-color: #f4f6fb; }
+        .hero {
+            background: linear-gradient(135deg, #4338ca 0%, #7e22ce 100%);
+            color: #fff; padding: 2.2rem 1rem;
+            border-radius: 0 0 1.5rem 1.5rem;
+        }
+        .card {
+            border: none; border-radius: 1rem;
+            box-shadow: 0 .5rem 1.5rem rgba(30, 41, 59, .10);
+        }
+        .form-label { font-weight: 600; color: #334155; }
+        .btn-predict {
+            background: linear-gradient(135deg, #4338ca, #7e22ce);
+            border: none; font-weight: 600; letter-spacing: .4px; padding: .75rem;
+        }
+        .btn-predict:hover { filter: brightness(1.1); color: #fff; }
+        .badge-result { font-size: 1.3rem; padding: .9rem 1.8rem; border-radius: .75rem; }
+        .approved { background-color: #16a34a; }
+        .rejected { background-color: #dc2626; }
+    </style>
+</head>
+<body>
+
+<!-- Display the project title and the machine learning model used for prediction. -->
+<header class="hero text-center mb-4">
+    <h1 class="fw-bold mb-2"><i class="bi bi-bank2 me-2"></i>Loan Approval Prediction System</h1>
+    <p class="mb-0 opacity-75">Minor Project in AI/ML &bull; Gaussian Naive Bayes Classifier</p>
+</header>
+
+<main class="container pb-5" style="max-width: 900px;">
+    <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+
+    <form id="loanForm" novalidate>
+
+        <!-- Collect the applicant's personal, employment, and education details. -->
+        <div class="card p-4 p-md-5">
+            <h4 class="mb-1"><i class="bi bi-person-vcard me-2 text-primary"></i>Applicant Profile</h4>
+            <p class="text-muted small mb-4">All fields are required before checking loan status.</p>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <label class="form-label" for="Applicant_Income">Applicant Income (monthly)</label>
+                    <input type="number" class="form-control" id="Applicant_Income" name="Applicant_Income"
+                           min="1" step="any" placeholder="e.g. 15000" required />
+                    <div class="form-text">Monthly income of the applicant.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="Coapplicant_Income">Coapplicant Income (monthly)</label>
+                    <input type="number" class="form-control" id="Coapplicant_Income" name="Coapplicant_Income"
+                           min="0" step="any" value="0" required />
+                    <div class="form-text">Monthly income of the co-applicant. Enter 0 if none.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="Employment_Status">Employment Status</label>
+                    <select class="form-select" id="Employment_Status" name="Employment_Status" required>
+                        <option value="" selected disabled>Select...</option>
+                        <option>Salaried</option>
+                        <option>Self-employed</option>
+                        <option>Business</option>
+                        <option>Contract</option>
+                        <option>Unemployed</option>
+                    </select>
+                    <div class="form-text">Salaried / Self-Employed / Business / Contract / Unemployed.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="Age">Age</label>
+                    <input type="number" class="form-control" id="Age" name="Age"
+                           min="18" max="80" placeholder="e.g. 35" required />
+                    <div class="form-text">Applicant age (18–80).</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="Gender">Gender</label>
+                    <select class="form-select" id="Gender" name="Gender" required>
+                        <option value="" selected disabled>Select...</option>
+                        <option>Male</option>
+                        <option>Female</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="Marital_Status">Marital Status</label>
+                    <select class="form-select" id="Marital_Status" name="Marital_Status" required>
+                        <option value="" selected disabled>Select...</option>
+                        <option>Married</option>
+                        <option>Single</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="Dependents">Dependents</label>
+                    <input type="number" class="form-control" id="Dependents" name="Dependents"
+                           min="0" max="20" value="0" required />
+                    <div class="form-text">Number of dependents.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="Education_Level">Education Level</label>
+                    <select class="form-select" id="Education_Level" name="Education_Level" required>
+                        <option value="" selected disabled>Select...</option>
+                        <option>Graduate</option>
+                        <option>Not Graduate</option>
+                    </select>
+                    <div class="form-text">Highest education level of the applicant.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collect the applicant's credit history and financial information. -->
+        <div class="card p-4 p-md-5 mt-4">
+            <h4 class="mb-1"><i class="bi bi-wallet2 me-2 text-primary"></i>Financial Profile</h4>
+            <p class="text-muted small mb-4">Credit and banking background of the applicant.</p>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <label class="form-label" for="Credit_Score">Credit Score</label>
+                    <input type="number" class="form-control" id="Credit_Score" name="Credit_Score"
+                           min="300" max="900" placeholder="e.g. 720" required />
+                    <div class="form-text">Credit bureau score (300–900).</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="Existing_Loans">Existing Loans</label>
+                    <input type="number" class="form-control" id="Existing_Loans" name="Existing_Loans"
+                           min="0" max="20" value="0" required />
+                    <div class="form-text">Number of already running loans.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="DTI_Ratio">DTI Ratio</label>
+                    <input type="number" class="form-control" id="DTI_Ratio" name="DTI_Ratio"
+                           min="0" max="1" step="0.01" placeholder="e.g. 0.35" required />
+                    <div class="form-text">Debt-to-Income ratio (0–1), e.g. 0.35.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="Savings">Savings</label>
+                    <input type="number" class="form-control" id="Savings" name="Savings"
+                           min="0" step="any" placeholder="e.g. 25000" required />
+                    <div class="form-text">Savings balance.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="Employer_Category">Employer Category</label>
+                    <select class="form-select" id="Employer_Category" name="Employer_Category" required>
+                        <option value="" selected disabled>Select...</option>
+                        <option>Government</option>
+                        <option>Private</option>
+                        <option>MNC</option>
+                        <option>Business</option>
+                        <option>Unemployed</option>
+                    </select>
+                    <div class="form-text">Type of employer (Govt / Private / MNC ...).</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collect the requested loan details and the associated property information. -->
+        <div class="card p-4 p-md-5 mt-4">
+            <h4 class="mb-1"><i class="bi bi-house-door me-2 text-primary"></i>Loan &amp; Property Details</h4>
+            <p class="text-muted small mb-4">Details of the loan being applied for.</p>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <label class="form-label" for="Loan_Amount">Loan Amount</label>
+                    <input type="number" class="form-control" id="Loan_Amount" name="Loan_Amount"
+                           min="1" step="any" placeholder="e.g. 20000" required />
+                    <div class="form-text">Loan amount requested.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="Loan_Term">Loan Term (months)</label>
+                    <select class="form-select" id="Loan_Term" name="Loan_Term" required>
+                        <option value="" selected disabled>Select term...</option>
+                        <option value="12">12 months</option>
+                        <option value="24">24 months</option>
+                        <option value="36">36 months</option>
+                        <option value="48">48 months</option>
+                        <option value="60">60 months</option>
+                        <option value="72">72 months</option>
+                        <option value="84">84 months</option>
+                    </select>
+                    <div class="form-text">Loan duration in months.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="Loan_Purpose">Loan Purpose</label>
+                    <select class="form-select" id="Loan_Purpose" name="Loan_Purpose" required>
+                        <option value="" selected disabled>Select...</option>
+                        <option>Home</option>
+                        <option>Education</option>
+                        <option>Personal</option>
+                        <option>Business</option>
+                        <option>Car</option>
+                    </select>
+                    <div class="form-text">Home / Education / Personal / Business / Car.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="Collateral_Value">Collateral Value</label>
+                    <input type="number" class="form-control" id="Collateral_Value" name="Collateral_Value"
+                           min="0" step="any" placeholder="e.g. 30000" required />
+                    <div class="form-text">Value of collateral provided.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="Property_Area">Property Area</label>
+                    <select class="form-select" id="Property_Area" name="Property_Area" required>
+                        <option value="" selected disabled>Select...</option>
+                        <option>Urban</option>
+                        <option>Semiurban</option>
+                        <option>Rural</option>
+                    </select>
+                    <div class="form-text">Urban / Semi-Urban / Rural.</div>
+                </div>
+            </div>
+
+            <button type="submit" id="predictBtn" class="btn btn-predict w-100 mt-4">
+                <i class="bi bi-cpu me-2"></i>Check Loan Approval Status
+            </button>
+        </div>
+    </form>
+
+    <!-- Display the approval decision returned by the Flask prediction endpoint. -->
+    <div id="resultCard" class="card p-4 p-md-5 mt-4 d-none text-center">
+        <h5 class="text-muted mb-3">Prediction Result</h5>
+        <span id="resultBadge" class="badge badge-result"></span>
+    </div>
+</main>
+
+<footer class="text-center text-muted small pb-4">
+    &copy; 2026 Loan Approval Prediction System &mdash; Minor Project in AI/ML
+</footer>
+
+<script>
+    // Cache the form and interface elements used by the submission workflow.
+    const form       = document.getElementById('loanForm');
+    const errorAlert = document.getElementById('errorAlert');
+    const resultCard = document.getElementById('resultCard');
+    const predictBtn = document.getElementById('predictBtn');
+
+    // Display an error message and bring the alert into the visible area.
+    function showError(html) {
+        errorAlert.innerHTML = html;
+        errorAlert.classList.remove('d-none');
+        errorAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    // Hide the validation or server error alert.
+    function hideError()  { errorAlert.classList.add('d-none'); }
+
+    // Update the result badge according to the prediction returned by the server.
+    function showResult(data) {
+        const approved = data.prediction === 1;
+
+        // Select the result badge that displays the final loan decision.
+        const badge = document.getElementById('resultBadge');
+        badge.className = 'badge badge-result ' + (approved ? 'approved' : 'rejected');
+        badge.innerHTML = approved
+            ? '<i class="bi bi-emoji-smile-fill me-2"></i>Congrats! Loan Approved'
+            : '<i class="bi bi-emoji-frown-fill me-2"></i>Sorry! Loan Not Approved';
+
+        resultCard.classList.remove('d-none');
+        resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // Submit the applicant data asynchronously without reloading the page.
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        // Stop submission when the browser detects missing or invalid form values.
+        if (!form.checkValidity()) {
+            form.classList.add('was-validated');
+            showError('<strong><i class="bi bi-exclamation-triangle me-1"></i>Please fill all the required fields correctly.</strong>');
+            return;
+        }
+        form.classList.remove('was-validated');
+        hideError();
+
+        // Temporarily disable the submit button and show a loading indicator.
+        const originalHTML = predictBtn.innerHTML;
+        predictBtn.disabled = true;
+        predictBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Checking...';
+
+        // Send the form fields to the Flask endpoint and process its JSON response.
+        try {
+            const response = await fetch('/predict', { method: 'POST', body: new FormData(form) });
+            const data = await response.json();
+
+            // Show field-level validation errors or a server error when the request fails.
+            if (!response.ok || !data.success) {
+                if (data.errors) {
+                    const list = Object.values(data.errors).map(msg => '&bull; ' + msg).join('<br>');
+                    showError('<strong>Validation failed:</strong><br>' + list);
+                } else {
+                    showError(data.message || 'Unexpected server error.');
+                }
+                return;
+            }
+            showResult(data);
+
+        // Handle network failures and restore the submit button in all cases.
+        } catch (err) {
+            showError('Could not reach the server. Make sure <code>python app.py</code> is running.');
+        } finally {
+            predictBtn.disabled = false;
+            predictBtn.innerHTML = originalHTML;
+        }
+    });
+</script>
+</body>
+</html>
